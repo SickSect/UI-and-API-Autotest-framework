@@ -37,6 +37,7 @@ public class ConfigReader {
         pageDriverSetupData.appiumAppPackage = get("appium.appPackage");
         pageDriverSetupData.appiumAppActivity = get("appium.appActivity");
         pageDriverSetupData.appiumNoReset = Boolean.parseBoolean(get("appium.noReset"));
+        pageDriverSetupData.url = get("appium.serverUrl");
         return pageDriverSetupData;
     }
 

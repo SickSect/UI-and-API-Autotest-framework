@@ -16,7 +16,7 @@ import static org.ugina.utils.ConfigReader.getPageDriverSetupData;
 public class ApiDemosMainTest implements IPage {
 
     private AndroidDriver driver;
-    private ApiDemosMainPage loginPage;
+    private ApiDemosMainPage page;
 
     @BeforeClass
     public void setUp() throws Exception {
@@ -29,14 +29,14 @@ public class ApiDemosMainTest implements IPage {
                 .amend("appium:appActivity", pageDriverSetupData.appiumAppActivity)
                 .amend("appium:noReset", pageDriverSetupData.appiumNoReset);
 
-        driver = new AndroidDriver(new URL("http://127.0.0.1:4723"), options);
-        loginPage = new ApiDemosMainPage(driver);
+        driver = new AndroidDriver(new URL(pageDriverSetupData.url), options);
+        page = new ApiDemosMainPage(driver);
     }
 
     @Test
     public void testClickAccessibility() {
-        loginPage.clickAccessibility();
-        assert loginPage.isOnAccessibilityScreen();
+        page.clickAccessibility();
+        assert page.isOnAccessibilityScreen();
     }
 
     @AfterClass

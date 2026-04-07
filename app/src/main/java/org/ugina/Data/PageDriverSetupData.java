@@ -7,5 +7,6 @@ public class PageDriverSetupData {
     public String appiumAppPackage;
     public String appiumAppActivity;
     public boolean appiumNoReset;
+    public String url;
 
 }
