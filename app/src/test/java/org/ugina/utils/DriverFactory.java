@@ -11,31 +11,41 @@ import org.testng.annotations.Test;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 
 public class DriverFactory {
 
     private AndroidDriver driver;
 
-    @BeforeClass
-    public void setUp() {
-        Capabilities options = new BaseOptions()
-                .amend("platformName", "Android")
-                .amend("appium:automationName", "UiAutomator2")
-                .amend("appium:deviceName", "Android Emulator")
-                .amend("appium:appPackage", "io.appium.android.apis")
-                .amend("appium:appActivity", ".ApiDemos")
-                .amend("appium:noReset", true)
-                .amend("appium:app", "C:\\Users\\sicke\\Desktop\\ApiDemos-debug.apk")
-                .amend("appium:ensureWebviewsHavePages", true)
-                .amend("appium:nativeWebScreenshot", true)
-                .amend("appium:newCommandTimeout", 3600)
-                .amend("appium:connectHardwareKeyboard", true);
+    public AndroidDriver createDriver() {
+        try {
+            Capabilities options = new BaseOptions()
+                    .amend("platformName", ConfigReader.get("appium.platformName"))
+                    .amend("appium:automationName", ConfigReader.get("appium.automationName"))
+                    .amend("appium:deviceName", ConfigReader.get("appium.deviceName"))
+                    .amend("appium:appPackage", ConfigReader.get("app.package"))
+                    .amend("appium:appActivity", ConfigReader.get("app.activity"))
+                    .amend("appium:noReset", ConfigReader.getBoolean("app.noReset"))
+                    .amend("appium:app", ConfigReader.get("app.path"))
+                    .amend("appium:newCommandTimeout", ConfigReader.getInt("appium.newCommandTimeout"));
 
-        driver = new AndroidDriver(this.getUrl(), options);
+            driver = new AndroidDriver(
+                    new URL(ConfigReader.get("appium.serverUrl")),
+                    options
+            );
+
+            driver.manage().timeouts().implicitlyWait(
+                    Duration.ofSeconds(ConfigReader.getInt("timeouts.implicitWait"))
+            );
+
+            return driver;
+        } catch (Exception e) {
+            throw new RuntimeException("❌ Не удалось создать драйвер", e);
+        }
     }
 
-    public void getDriver(){
-
+    public void quitDriver() {
+        if (driver != null) driver.quit();
     }
 
     @Test
@@ -57,7 +67,7 @@ public class DriverFactory {
 
     private URL getUrl() {
         try {
-            return new URL("http://127.0.0.1:4723");
+            return new URL(ConfigReader.get("appium.serverUrl"));
         } catch (MalformedURLException e) {
             e.printStackTrace();
             return null;

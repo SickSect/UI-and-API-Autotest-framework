@@ -1,5 +1,9 @@
 # 🛠️ Настройка окружения: Appium + Android SDK (Windows)
 
+
+
+
+
 # link - https://habr.com/ru/companies/otus/articles/682268/
 
 ## 1️⃣ Node.js & npm
