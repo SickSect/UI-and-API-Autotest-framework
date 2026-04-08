@@ -1,0 +1,76 @@
+
+plugins {
+    id 'java'
+    id 'io.qameta.allure' version '3.1.0'
+}
+
+group = 'org.ugina'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'io.appium:java-client:9.2.2'
+    testImplementation 'org.seleniumhq.selenium:selenium-java:4.19.0'
+    testImplementation 'org.testng:testng:7.9.0'
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+    // LOGS
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'ch.qos.logback:logback-classic:1.5.6'
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+    // REPORT
+    testImplementation("io.qameta.allure:allure-testng:2.33.0")
+}
+
+allure {
+    version = '2.33.0' // Версия Allure CLI
+}
+
+configurations.all {
+    resolutionStrategy {
+        force 'org.seleniumhq.selenium:selenium-api:4.19.0'
+        force 'org.seleniumhq.selenium:selenium-remote-driver:4.19.0'
+        force 'org.seleniumhq.selenium:selenium-support:4.19.0'
+        force 'org.seleniumhq.selenium:selenium-http:4.19.0'
+        force 'org.seleniumhq.selenium:selenium-json:4.19.0'
+        force 'org.seleniumhq.selenium:selenium-manager:4.19.0'
+        force 'org.seleniumhq.selenium:selenium-os:4.19.0'
+    }
+}
+
+test {
+    useTestNG() {
+        // Если передан -Dtestng.xml=custom.xml, используем его, иначе дефолтный
+        def suiteFile = System.getProperty('testng.xml', 'src/test/resources/testng.xml')
+        if (file(suiteFile).exists()) {
+            suites suiteFile
+        }
+        parallel 'tests'
+        threadCount 2
+        useDefaultListeners = false
+    }
+    finalizedBy 'allureReport'
+}
+
+tasks.register('testWithReport') {
+    group = 'verification'
+    description = 'Clean, run tests and generate Allure report (without starting server)'
+
+    // 🔹 Порядок: сначала clean, потом тесты, потом отчёт
+    dependsOn 'clean', 'test', 'allureReport'
+
+    // 🔹 Отключаем кэш конфигурации (из-за доступа к project в doLast)
+    notCompatibleWithConfigurationCache("Accesses project.buildDir at execution time")
+
+    doLast {
+        def buildDir = layout.buildDirectory.asFile.get()
+        def reportPath = file("$buildDir/reports/allure-report/index.html").absolutePath
+
+        println "Allure report generated successfully!"
+        println "Path: $reportPath"
+        println "Open: file:///$reportPath"
+    }
+}
