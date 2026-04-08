@@ -1,4 +1,4 @@
-https://github.com/appium/appium/raw/master/packages/appium/sample-code/apps/ApiDemos-debug.apk
+ https://github.com/appium/appium/raw/master/packages/appium/sample-code/apps/ApiDemos-debug.apk
 
 # 1. Задай переменную для текущей сессии
 ```angular2html

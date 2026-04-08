@@ -5,6 +5,7 @@ import io.appium.java_client.remote.options.BaseOptions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.WebElement;
+import org.slf4j.MDC;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -17,6 +18,8 @@ public class DriverFactory {
 
     private AndroidDriver driver;
 
+
+    @BeforeClass
     public AndroidDriver createDriver() {
         try {
             Capabilities options = new BaseOptions()
@@ -38,6 +41,9 @@ public class DriverFactory {
                     Duration.ofSeconds(ConfigReader.getInt("timeouts.implicitWait"))
             );
 
+            MDC.put("deviceName", String.valueOf(options.getCapability("deviceName")));
+            MDC.put("testFramework", "JUnit5");
+
             return driver;
         } catch (Exception e) {
             throw new RuntimeException("❌ Не удалось создать драйвер", e);
@@ -46,18 +52,6 @@ public class DriverFactory {
 
     public void quitDriver() {
         if (driver != null) driver.quit();
-    }
-
-    @Test
-    public void sampleTest() {
-
-    }
-
-    @Test
-    public void testAppLoads() {
-        // 🔹 Простейший локатор, который точно есть в ApiDemos
-        WebElement anyText = driver.findElement(By.className("android.widget.TextView"));
-        assert anyText.isDisplayed() : "Элемент не найден";
     }
 
     @AfterClass

@@ -1,0 +1,12 @@
+<configuration>
+    <!-- Зависимость: net.logstash.logback:logstash-logback-encoder -->
+    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"service":"my-app","env":"${ENV:prod}"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON"/>
+    </root>
+</configuration>

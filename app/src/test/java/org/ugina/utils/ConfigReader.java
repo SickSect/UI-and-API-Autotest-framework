@@ -13,7 +13,7 @@ public class ConfigReader {
 
     static {
         try (InputStream is = ConfigReader.class.getClassLoader()
-                .getResourceAsStream("config.properties")) {
+                .getResourceAsStream("app.properties")) {
             if (is == null) throw new RuntimeException("❌ Файл config.properties не найден");
             props.load(is);
         } catch (IOException e) {
@@ -30,13 +30,12 @@ public class ConfigReader {
 
     public static PageDriverSetupData getPageDriverSetupData() {
         PageDriverSetupData pageDriverSetupData = new PageDriverSetupData();
-        pageDriverSetupData.appiumDeviceName = get("appium.device_name");
-        pageDriverSetupData.platformName = get("appium.platformName");
         pageDriverSetupData.appiumDeviceName = get("appium.deviceName");
+        pageDriverSetupData.platformName = get("appium.platformName");
         pageDriverSetupData.appiumAutomationName = get("appium.automationName");
-        pageDriverSetupData.appiumAppPackage = get("appium.appPackage");
-        pageDriverSetupData.appiumAppActivity = get("appium.appActivity");
-        pageDriverSetupData.appiumNoReset = Boolean.parseBoolean(get("appium.noReset"));
+        pageDriverSetupData.appiumAppPackage = get("app.package");
+        pageDriverSetupData.appiumAppActivity = get("app.activity");
+        pageDriverSetupData.appiumNoReset = Boolean.parseBoolean(get("app.noReset"));
         pageDriverSetupData.url = get("appium.serverUrl");
         return pageDriverSetupData;
     }
