@@ -90,17 +90,19 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
-          arch: x86_64
+          arch: x86
           profile: pixel_5
           target: default
+          force-avd-creation: true
           disable-animations: true
           disable-spellchecker: true
-          boot-timeout: 300
+          boot-timeout: 600
           emulator-options: >
             -no-window -gpu swiftshader_indirect -no-snapshot 
             -noaudio -no-boot-anim -camera-back none
           script: |
-            adb devices
+            adb wait-for-device shell getprop sys.boot_completed
+            echo "✅ Emulator is ready!"
             ./gradlew clean testWithReport -Dconfig.file=ci.properties
 
       - name: Upload Allure Report
