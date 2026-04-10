@@ -56,6 +56,14 @@ test {
     finalizedBy 'allureReport'
 }
 
+tasks.withType(io.qameta.allure.gradle.report.tasks.AllureReport).configureEach {
+    notCompatibleWithConfigurationCache("Allure plugin accesses project at execution time")
+}
+
+tasks.withType(io.qameta.allure.gradle.report.tasks.AllureServe).configureEach {
+    notCompatibleWithConfigurationCache("Allure plugin accesses project at execution time")
+}
+
 tasks.register('testWithReport') {
     group = 'verification'
     description = 'Clean, run tests and generate Allure report (without starting server)'

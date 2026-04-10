@@ -66,5 +66,6 @@ public class MainPageTest extends BaseTest {
         page.clickRadioButton1("RadioButton 1");
         Assert.assertTrue(page.isRadioButton1Selected(), "Шаг 2: RadioButton 1 должен стать выбранным");
         Assert.assertFalse(page.isRadioButton2Selected(), "Шаг 3: RadioButton 2 должен сняться (exclusive)");
+        attachScreenshot("TEST");
     }
 }

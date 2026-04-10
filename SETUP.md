@@ -214,7 +214,12 @@ echo "✅ Emulator is ready!"
 if: always()
 uses: actions/upload-artifact@v4
 with:
+
 name: allure-report-${{ github.run_number }}
 path: app/build/reports/allure-report
 retention-days: 7
+
+
+
+taskkill /F /IM java.exe
 ```
