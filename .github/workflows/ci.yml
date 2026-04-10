@@ -90,10 +90,11 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
-          arch: x86
+          arch: x86_64
           profile: pixel_5
-          target: default
+          target: 'google_apis'
           force-avd-creation: true
+          emulator-boot-timeout: 600
           disable-animations: true
           disable-spellchecker: true
           boot-timeout: 600
