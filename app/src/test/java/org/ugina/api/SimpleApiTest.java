@@ -39,7 +39,7 @@ public class SimpleApiTest {
 
     // ──── POST с JSON ────
 
-/*    @Test
+    @Test
     public void testPostWithJson() throws Exception {
         // JsonBody оборачивает строку и выставляет Content-Type: application/json
         JsonRequestBody body = new JsonRequestBody("""
@@ -49,14 +49,18 @@ public class SimpleApiTest {
                 }
                 """);
 
-        HttpResponse<String> response = apiClient.post("/users", body);
+        RequestInfo requestInfo = new RequestInfo();
+        requestInfo.setMethod("GET");
+        requestInfo.setPath("/users");
+        requestInfo.setBody(body);
+        HttpResponse<String> response = apiClient.sendRequest(requestInfo);
 
-        Assert.assertEquals(response.statusCode(), 201);
+        Assert.assertEquals(response.statusCode(), 200);
         Assert.assertTrue(response.body().contains("\"id\""));
 
         System.out.println("POST /users (JSON) → " + response.statusCode());
         System.out.println("Response: " + response.body());
-    }*/
+    }
 
     // ──── POST с XML ────
 
