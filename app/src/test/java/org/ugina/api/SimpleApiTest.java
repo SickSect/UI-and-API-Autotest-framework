@@ -37,10 +37,10 @@ public class SimpleApiTest {
         HttpResponse<String> response = apiClient.sendRequest(requestInfo);
     }
 
-    // ──── POST с JSON ────
+    // ──── Get с JSON ────
 
     @Test
-    public void testPostWithJson() throws Exception {
+    public void testGetWithJson() throws Exception {
         // JsonBody оборачивает строку и выставляет Content-Type: application/json
         JsonRequestBody body = new JsonRequestBody("""
                 {
@@ -59,6 +59,36 @@ public class SimpleApiTest {
         Assert.assertTrue(response.body().contains("\"id\""));
 
         System.out.println("POST /users (JSON) → " + response.statusCode());
+        System.out.println("Response: " + response.body());
+    }
+
+    // ──── POST с XML ────
+
+    @Test
+    public void testPostWithXml() throws Exception {
+        // XmlBody — тот же интерфейс, но Content-Type: application/xml
+        // jsonplaceholder не понимает XML, но нам важно что запрос уходит корректно
+        XmlRequestBody body = new XmlRequestBody("""
+                <?xml version="1.0" encoding="UTF-8"?>
+                <user>
+                    <name>Test User</name>
+                    <email>test@example.com</email>
+                </user>
+                """);
+
+        RequestInfo requestInfo = new RequestInfo();
+        requestInfo.setMethod("POST");
+        requestInfo.setPath("/users");
+        requestInfo.setBody(body);
+        HttpResponse<String> response = apiClient.sendRequest(requestInfo);
+
+        response = apiClient.sendRequest(requestInfo);
+
+        // jsonplaceholder вернёт 201 даже для XML — ему всё равно на Content-Type
+        // В реальном API ты увидишь разницу в обработке
+        Assert.assertEquals(response.statusCode(), 201);
+
+        System.out.println("POST /users (XML) → " + response.statusCode());
         System.out.println("Response: " + response.body());
     }
 
