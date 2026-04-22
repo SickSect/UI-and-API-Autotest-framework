@@ -1,4 +1,4 @@
-package org.ugina.api;
+package org.ugina.apiTests;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -17,8 +17,8 @@ import java.time.Duration;
  * SSLContext собирается, и HttpClient с ним работает.
  *
  * Сертификаты лежат в src/test/resources/certs/:
- *   TESTTESTclient.p12     — клиентский сертификат (пароль: keypass)
- *   TESTTESTtruststore.p12 — доверенные сертификаты (пароль: trustpass)
+ *   TESTclient.p12     — клиентский сертификат (пароль: keypass)
+ *   TESTtruststore.p12 — доверенные сертификаты (пароль: trustpass)
  *
  * Сгенерированы через keytool:
  *   keytool -genkeypair -alias client -keyalg RSA -keysize 2048

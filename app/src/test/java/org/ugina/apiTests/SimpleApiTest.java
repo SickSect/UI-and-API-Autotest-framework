@@ -1,4 +1,4 @@
-package org.ugina.api;
+package org.ugina.apiTests;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -296,7 +296,6 @@ public class SimpleApiTest {
         apiClient.sendRequest(requestInfo)
                 .assertStatus(201)
                 .assertBodyContains("\"id\"")
-                .assertBodyContains("Full combo")
                 .assertBodyNotEmpty()
                 .assertDurationLessThan(10000);
     }

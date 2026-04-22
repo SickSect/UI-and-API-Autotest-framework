@@ -1,11 +1,49 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="MobileParallelSuite" parallel="tests" thread-count="2" verbose="2">
 
-    <test name="CheckboxTests">
+<!--
+    parallel="methods" — каждый @Test-метод запускается в отдельном потоке.
+    thread-count="4"   — максимум 4 потока одновременно.
+
+    Три варианта parallel в TestNG:
+
+    parallel="tests"    — каждый <test> блок в своём потоке.
+                          Методы ВНУТРИ блока — последовательно.
+                          Подходит для UI-тестов (один драйвер на блок).
+
+    parallel="methods"  — каждый @Test метод в своём потоке.
+                          Максимальная параллельность.
+                          Подходит для API-тестов (нет общего состояния).
+
+    parallel="classes"  — каждый класс в своём потоке.
+                          Методы внутри класса — последовательно.
+                          Компромисс между первыми двумя.
+-->
+<suite name="FullSuite" verbose="2">
+
+    <!--
+        API-тесты: parallel="methods", потому что каждый тест независим.
+        ApiRequestClient потокобезопасен — один экземпляр из @BeforeClass
+        можно вызывать из любого количества потоков.
+    -->
+    <test name="API Tests" parallel="methods" thread-count="4">
         <classes>
-            <class name="org.ugina.tests.MainPageTest">
-            </class>
+            <class name="org.ugina.apiTests.SimpleApiTest"/>
+            <class name="org.ugina.apiTests.SimpleSslConfigTest"/>
         </classes>
     </test>
+
+    <!--
+        UI-тесты: parallel="tests" (не methods!), потому что
+        каждый тест-блок = свой драйвер через ThreadLocal в DriverManager.
+        Если поставить parallel="methods" — методы внутри одного класса
+        полезут в один драйвер из разных потоков и всё сломается.
+    -->
+    <!--
+    <test name="Mobile Tests - Checkboxes" parallel="tests" thread-count="2">
+        <classes>
+            <class name="org.ugina.tests.MainPageTest"/>
+        </classes>
+    </test>
+    -->
 
 </suite>

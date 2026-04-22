@@ -48,8 +48,6 @@ test {
         if (file(suiteFile).exists()) {
             suites suiteFile
         }
-        parallel 'tests'
-        threadCount 2
         useDefaultListeners = false
     }
     systemProperty 'test.mode', System.getProperty('test.mode', 'local')
