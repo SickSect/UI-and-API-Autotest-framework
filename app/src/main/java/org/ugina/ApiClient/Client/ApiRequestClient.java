@@ -2,7 +2,6 @@ package org.ugina.ApiClient.Client;
 
 import org.ugina.ApiClient.Config.ApiClientConfigReader;
 import org.ugina.ApiClient.Data.ApiResponse;
-import org.ugina.ApiClient.Data.IRequestBody;
 import org.ugina.ApiClient.Data.RequestInfo;
 import org.ugina.ApiClient.utils.Log;
 
