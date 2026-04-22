@@ -1,4 +1,4 @@
-package org.ugina.ApiClient.Client;
+package org.ugina.ApiClient.Db;
 
 import java.util.ArrayList;
 import java.util.List;

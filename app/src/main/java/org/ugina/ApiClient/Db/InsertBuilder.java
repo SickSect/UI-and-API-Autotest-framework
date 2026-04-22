@@ -1,7 +1,5 @@
 package org.ugina.ApiClient.Db;
 
-import org.ugina.ApiClient.Client.IDbClient;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

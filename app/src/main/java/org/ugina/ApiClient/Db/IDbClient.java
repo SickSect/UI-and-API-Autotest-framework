@@ -1,4 +1,4 @@
-package org.ugina.ApiClient.Client;
+package org.ugina.ApiClient.Db;
 
 import java.util.List;
 import java.util.Map;
@@ -34,6 +34,28 @@ import java.util.Map;
  *   db.username=postgres
  *   db.password=secret
  *   db.driver=org.postgresql.Driver
+ */
+
+/**
+ * HOW TO USE
+ * DbClient db = new JdbcDbClient("jdbc:h2:mem:testdb", "sa", "");
+ * db.connect();
+ *
+ * // INSERT
+ * db.insert("users").set("name", "John").set("age", 30).execute();
+ *
+ * // SELECT
+ * Map<String, Object> user = db.select("users")
+ *         .where("name", "John")
+ *         .executeOne();
+ *
+ * // UPDATE
+ * db.update("users").set("age", 31).where("name", "John").execute();
+ *
+ * // DELETE
+ * db.delete("users").where("name", "John").execute();
+ *
+ * db.close();
  */
 public interface IDbClient extends AutoCloseable {
 
@@ -125,7 +147,7 @@ public interface IDbClient extends AutoCloseable {
      *           .limit(10)
      *           .execute();
      */
-    org.ugina.ApiClient.Client.QueryBuilder select(String table);
+    QueryBuilder select(String table);
 
     /**
      * Создаёт INSERT-билдер.
