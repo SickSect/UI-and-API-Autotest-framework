@@ -103,6 +103,8 @@ test {
 tasks.register('apiTest', Test) {
     group = 'verification'                          // группа в ./gradlew tasks
     description = 'Run API tests only (parallel)'
+    testClassesDirs= sourceSets.test.output.classesDirs
+    classpath=sourceSets.test.runtimeClasspath
 
     useTestNG() {
         suites 'src/test/resources/testing-api.xml'
@@ -124,12 +126,13 @@ tasks.register('uiTest', Test) {
     group = 'verification'
     description = 'Run UI/Appium tests only'
 
+    testClassesDirs= sourceSets.test.output.classesDirs
+    classpath=sourceSets.test.runtimeClasspath
+
     useTestNG() {
         suites 'src/test/resources/testing-ui.xml'
         useDefaultListeners = false
     }
-
-    systemProperty 'test.mode', System.getProperty('test.mode', 'local')
 
     testLogging {
         showStandardStreams = true
@@ -144,6 +147,9 @@ tasks.register('uiTest', Test) {
 tasks.register('sslTest', Test) {
     group = 'verification'
     description = 'Run SSL/certificate tests only'
+
+    testClassesDirs= sourceSets.test.output.classesDirs
+    classpath=sourceSets.test.runtimeClasspath
 
     useTestNG() {
         suites 'src/test/resources/testing-ssl.xml'

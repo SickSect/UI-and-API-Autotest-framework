@@ -19,5 +19,4 @@
             <class name="org.ugina.apiTests.SimpleApiTest"/>
         </classes>
     </test>
-
 </suite>
