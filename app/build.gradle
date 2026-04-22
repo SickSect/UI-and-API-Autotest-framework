@@ -41,19 +41,6 @@ configurations.all {
     }
 }
 
-test {
-    useTestNG() {
-        // Если передан -Dtestng.xml=custom.xml, используем его, иначе дефолтный
-        def suiteFile = System.getProperty('testng.xml', 'src/test/resources/testng.xml')
-        if (file(suiteFile).exists()) {
-            suites suiteFile
-        }
-        useDefaultListeners = false
-    }
-    systemProperty 'test.mode', System.getProperty('test.mode', 'local')
-    finalizedBy 'allureReport'
-}
-
 tasks.withType(io.qameta.allure.gradle.report.tasks.AllureReport).configureEach {
     notCompatibleWithConfigurationCache("Allure plugin accesses project at execution time")
 }
@@ -79,5 +66,92 @@ tasks.register('testWithReport') {
         println "Allure report generated successfully!"
         println "Path: $reportPath"
         println "Open: file:///$reportPath"
+    }
+}
+
+// ──── 1. Дефолтная задача test ────
+// Запуск: ./gradlew test
+// Или с кастомным XML: ./gradlew test -Dtestng.xml=src/test/resources/testing-api.xml
+
+test {
+    useTestNG() {
+        def suiteFile = System.getProperty('testng.xml', 'src/test/resources/testing.xml')
+        if (file(suiteFile).exists()) {
+            suites suiteFile
+        }
+        useDefaultListeners = false
+        // НЕ указываем parallel и threadCount здесь —
+        // пусть XML-файл управляет параллельностью
+    }
+    systemProperty 'test.mode', System.getProperty('test.mode', 'local')
+
+    // Выводить логи тестов в консоль (иначе Gradle глотает System.out)
+    testLogging {
+        showStandardStreams = true
+        events "passed", "failed", "skipped"
+    }
+}
+
+
+// ──── 2. Только API-тесты ────
+// Запуск: ./gradlew apiTest
+//
+// tasks.register — создаёт НОВУЮ задачу типа Test.
+// Это НЕ то же самое что стандартный "test" — это отдельная команда
+// со своим XML-файлом и своими настройками.
+
+tasks.register('apiTest', Test) {
+    group = 'verification'                          // группа в ./gradlew tasks
+    description = 'Run API tests only (parallel)'
+
+    useTestNG() {
+        suites 'src/test/resources/testing-api.xml'
+        useDefaultListeners = false
+    }
+
+    testLogging {
+        showStandardStreams = true
+        events "passed", "failed", "skipped"
+    }
+}
+
+
+// ──── 3. Только UI/Appium тесты ────
+// Запуск: ./gradlew uiTest
+// Или с cloud: ./gradlew uiTest -Dtest.mode=cloud
+
+tasks.register('uiTest', Test) {
+    group = 'verification'
+    description = 'Run UI/Appium tests only'
+
+    useTestNG() {
+        suites 'src/test/resources/testing-ui.xml'
+        useDefaultListeners = false
+    }
+
+    systemProperty 'test.mode', System.getProperty('test.mode', 'local')
+
+    testLogging {
+        showStandardStreams = true
+        events "passed", "failed", "skipped"
+    }
+}
+
+
+// ──── 4. Только SSL-тесты ────
+// Запуск: ./gradlew sslTest
+
+tasks.register('sslTest', Test) {
+    group = 'verification'
+    description = 'Run SSL/certificate tests only'
+
+    useTestNG() {
+        suites 'src/test/resources/testing-ssl.xml'
+        useDefaultListeners = false
+    }
+
+    testLogging {
+        showStandardStreams = true
+        events "passed", "failed", "skipped"
     }
 }

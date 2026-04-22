@@ -1,0 +1,23 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+    API-тесты в многопоточке.
+    Запуск: ./gradlew apiTest
+
+    parallel="methods" — каждый @Test метод в отдельном потоке.
+    thread-count="4"   — максимум 4 метода одновременно.
+
+    Безопасно, потому что:
+      - ApiRequestClient потокобезопасен (HttpClient из JDK потокобезопасен)
+      - Каждый метод создаёт свой RequestInfo (локальная переменная)
+      - Общего мутабельного состояния между тестами нет
+-->
+<suite name="ApiSuite" parallel="methods" thread-count="4" verbose="2">
+
+    <test name="API Tests">
+        <classes>
+            <class name="org.ugina.apiTests.SimpleApiTest"/>
+        </classes>
+    </test>
+
+</suite>
