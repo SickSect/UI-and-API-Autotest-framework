@@ -2,6 +2,7 @@ package org.ugina.apiTests;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.ugina.ApiClient.Client.ApiClientProvider;
 import org.ugina.ApiClient.Client.ApiRequestClient;
 import org.ugina.ApiClient.Data.JsonRequestBody;
 import org.ugina.ApiClient.Data.RequestInfo;
@@ -13,7 +14,7 @@ public class SimpleApiTest {
 
     @BeforeClass
     public void setUp() {
-        apiClient = new ApiRequestClient("https://jsonplaceholder.typicode.com");
+        apiClient = ApiClientProvider.get("test");
     }
 
     // ──── GET ────

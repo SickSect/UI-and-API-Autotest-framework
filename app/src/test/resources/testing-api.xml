@@ -14,6 +14,10 @@
 -->
 <suite name="ApiSuite" parallel="methods" thread-count="4" verbose="2">
 
+    <listeners>
+        <listener class-name="org.ugina.retry.RetryListener"/>
+    </listeners>
+
     <test name="API Tests">
         <classes>
             <class name="org.ugina.apiTests.SimpleApiTest"/>

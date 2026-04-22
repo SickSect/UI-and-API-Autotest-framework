@@ -1,6 +1,7 @@
 package org.ugina.ApiClient.Client;
 
 import org.ugina.ApiClient.Config.ApiClientConfigReader;
+import org.ugina.ApiClient.Config.SslConfig;
 import org.ugina.ApiClient.Data.ApiResponse;
 import org.ugina.ApiClient.Data.RequestInfo;
 import org.ugina.ApiClient.utils.Log;
@@ -16,37 +17,175 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-public class ApiRequestClient  {
+/**
+ * HTTP client built on java.net.http — no external dependencies.
+ * HTTP-клиент на java.net.http — без внешних зависимостей.
+ *
+ * Each instance holds one HttpClient (thread-safe) and one baseUrl.
+ * Каждый экземпляр содержит один HttpClient (потокобезопасный) и один baseUrl.
+ *
+ * Created and managed by ApiClientProvider — not by tests directly.
+ * Создаётся и управляется через ApiClientProvider — не напрямую из тестов.
+ */
+public class ApiRequestClient {
 
     private static final Log log = Log.forClass(ApiRequestClient.class);
 
-    private HttpClient httpClient;
-    private String baseUrl;
+    private final HttpClient httpClient;
+    private final String baseUrl;
 
+    /**
+     * Creates client without SSL.
+     * Создаёт клиент без SSL.
+     *
+     * @param baseUrl base URL for all requests / базовый URL для всех запросов
+     */
     public ApiRequestClient(String baseUrl) {
         this.baseUrl = baseUrl;
         this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(Integer.parseInt(ApiClientConfigReader.get("timeout.connection"))))
-                .followRedirects(HttpClient.Redirect.NORMAL) // CONFIG IN NEXT STEP
+                .connectTimeout(Duration.ofSeconds(
+                        ApiClientConfigReader.getIntOrDefault("timeout.connection", 30)))
+                .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
+
+        log.info("ApiRequestClient created | baseUrl={}", baseUrl);
     }
 
     /**
-     * Логирует детали HTTP-запроса.
+     * Creates client with SSL certificates.
+     * Создаёт клиент с SSL-сертификатами.
      *
-     * Мы работаем с java.net.http.HttpRequest — поэтому не нужно гадать через reflection,
-     * а можем напрямую вызывать его методы: .method(), .uri(), .headers().
+     * SslConfig merges custom truststore with system truststore,
+     * so regular HTTPS requests (to public APIs) still work.
      *
-     * Формат вывода:
-     *   ══════ REQUEST ══════
-     *   → POST https://api.example.com/users?page=1
-     *   Headers:
-     *     Content-Type: application/json
-     *     Authorization: ****
-     *   Body: {"name": "John"}
-     *   ═════════════════════
+     * SslConfig объединяет кастомный truststore с системным,
+     * поэтому обычные HTTPS-запросы (к публичным API) продолжают работать.
      *
-     * @param request собранный запрос из java.net.http
+     * @param baseUrl   base URL / базовый URL
+     * @param sslConfig SSL configuration with keystore and/or truststore
+     */
+    public ApiRequestClient(String baseUrl, SslConfig sslConfig) {
+        this.baseUrl = baseUrl;
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(
+                        ApiClientConfigReader.getIntOrDefault("timeout.connection", 30)))
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .sslContext(sslConfig.createSslContext())
+                .build();
+
+        log.info("ApiRequestClient created | baseUrl={} | SSL=enabled", baseUrl);
+    }
+
+    /**
+     * Returns the base URL of this client.
+     * Возвращает базовый URL этого клиента.
+     */
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    /**
+     * Sends an HTTP request based on RequestInfo data.
+     * Отправляет HTTP-запрос на основе данных из RequestInfo.
+     *
+     * Assembly order / Порядок сборки:
+     *   1. Body → BodyPublisher (or noBody)
+     *   2. Query params → URL string
+     *   3. URI = baseUrl + path + query
+     *   4. Method + body via .method(String, BodyPublisher)
+     *   5. Headers from Map
+     *   6. Send + log result
+     *
+     * @param requestInfo request data / данные запроса
+     * @return ApiResponse wrapper / обёртка ответа
+     * @throws IOException on network errors / при сетевых ошибках
+     * @throws InterruptedException if thread was interrupted / если поток прерван
+     */
+    public ApiResponse sendRequest(RequestInfo requestInfo) throws IOException, InterruptedException {
+        // 1. Body
+        HttpRequest.BodyPublisher bodyPublisher;
+        if (requestInfo.getBody() != null) {
+            bodyPublisher = HttpRequest.BodyPublishers.ofString(requestInfo.getBody().content());
+        } else {
+            bodyPublisher = HttpRequest.BodyPublishers.noBody();
+        }
+
+        // 2. Query parameters → string
+        String query = buildQueryString(requestInfo.getQueryParams());
+
+        // 3. URI
+        URI uri = URI.create(this.baseUrl + requestInfo.getPath() + query);
+
+        // 4. Method + body
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(uri)
+                .method(requestInfo.getMethod(), bodyPublisher);
+
+        // 5. Headers
+        if (requestInfo.getHeaders() != null) {
+            requestInfo.getHeaders().forEach(builder::header);
+        }
+
+        // Auto-set Content-Type from body if not already in headers
+        // Автоматически ставим Content-Type из body, если не задан в headers
+        if (requestInfo.getBody() != null && !requestInfo.getHeaders().containsKey("Content-Type")) {
+            builder.header("Content-Type", requestInfo.getBody().contentType());
+        }
+
+        HttpRequest request = builder.build();
+        logRequest(request);
+
+        // 6. Send
+        try {
+            long start = System.currentTimeMillis();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            long duration = System.currentTimeMillis() - start;
+
+            logResponse(response, duration);
+            return new ApiResponse(response, duration);
+
+        } catch (IOException e) {
+            log.error("Network error: {} {} | reason: {}",
+                    requestInfo.getMethod(), uri, e.getMessage());
+            throw e;
+
+        } catch (InterruptedException e) {
+            log.error("Request interrupted: {} {} | reason: {}",
+                    requestInfo.getMethod(), uri, e.getMessage());
+            Thread.currentThread().interrupt();
+            throw e;
+        }
+    }
+
+    // ──── Query string builder ────
+
+    /**
+     * Builds query string from Map: {page=1, limit=10} → "?page=1&limit=10"
+     * Собирает query-строку из Map: {page=1, limit=10} → "?page=1&limit=10"
+     *
+     * URLEncoder.encode() escapes special characters: space → %20, & → %26
+     * URLEncoder.encode() экранирует спецсимволы: пробел → %20, & → %26
+     */
+    private String buildQueryString(Map<String, String> queryParams) {
+        if (queryParams == null || queryParams.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder("?");
+        queryParams.forEach((key, value) -> {
+            if (sb.length() > 1) sb.append("&");
+            sb.append(URLEncoder.encode(key, StandardCharsets.UTF_8));
+            sb.append("=");
+            sb.append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+        });
+        return sb.toString();
+    }
+
+    // ──── Logging ────
+
+    /**
+     * Logs HTTP request details: method, URL, headers, body presence.
+     * Логирует детали запроса: метод, URL, заголовки, наличие тела.
      */
     private void logRequest(HttpRequest request) {
         if (request == null) {
@@ -57,12 +196,10 @@ public class ApiRequestClient  {
         log.info("══════ REQUEST ══════");
         log.info("→ {} {}", request.method(), request.uri());
 
-        // Заголовки
         Map<String, List<String>> headers = request.headers().map();
         if (!headers.isEmpty()) {
             log.info("Headers:");
             headers.forEach((name, values) -> {
-                // Маскируем чувствительные заголовки
                 String displayValue = isSensitiveHeader(name)
                         ? "****"
                         : String.join(", ", values);
@@ -70,7 +207,6 @@ public class ApiRequestClient  {
             });
         }
 
-        // Тело — если есть, логируем на уровне debug (может быть большим)
         request.bodyPublisher().ifPresent(publisher ->
                 log.debug("Body: (present, see request content)")
         );
@@ -79,19 +215,8 @@ public class ApiRequestClient  {
     }
 
     /**
-     * Логирует детали HTTP-ответа.
-     *
-     * Формат вывода:
-     *   ══════ RESPONSE ══════
-     *   ← 201 Created | 245ms
-     *   Headers:
-     *     content-type: application/json; charset=utf-8
-     *     cache-control: no-cache
-     *   Body (preview): {"id":101,"name":"John"...
-     *   ══════════════════════
-     *
-     * @param response ответ от сервера
-     * @param durationMs время выполнения запроса в миллисекундах
+     * Logs HTTP response details: status, duration, headers, body preview.
+     * Логирует детали ответа: статус, время, заголовки, превью тела.
      */
     private void logResponse(HttpResponse<String> response, long durationMs) {
         if (response == null) {
@@ -102,7 +227,6 @@ public class ApiRequestClient  {
         log.info("══════ RESPONSE ══════");
         log.info("← {} | {}ms", response.statusCode(), durationMs);
 
-        // Заголовки ответа
         Map<String, List<String>> headers = response.headers().map();
         if (!headers.isEmpty()) {
             log.info("Headers:");
@@ -111,7 +235,6 @@ public class ApiRequestClient  {
             );
         }
 
-        // Тело ответа — превью на info, полное на debug
         String body = response.body();
         if (body != null && !body.isEmpty()) {
             if (body.length() <= 300) {
@@ -128,8 +251,8 @@ public class ApiRequestClient  {
     }
 
     /**
-     * Проверяет, является ли заголовок чувствительным.
-     * Такие заголовки маскируются в логах как "****".
+     * Checks if a header contains sensitive data (masked in logs as "****").
+     * Проверяет, содержит ли заголовок чувствительные данные (маскируется в логах).
      */
     private boolean isSensitiveHeader(String headerName) {
         String lower = headerName.toLowerCase();
@@ -139,80 +262,5 @@ public class ApiRequestClient  {
                 || lower.contains("secret")
                 || lower.contains("api-key")
                 || lower.contains("x-api-key");
-    }
-
-    /**
-     * Отправляет HTTP-запрос на основе собранных данных в RequestInfo.
-     *
-     * Порядок сборки запроса:
-     *   1. Определяем наличие тела (body) → BodyPublisher
-     *   2. Собираем query-параметры в строку → приклеиваем к URL
-     *   3. Создаём URI (baseUrl + path + query)
-     *   4. Устанавливаем метод и тело через .method(String, BodyPublisher)
-     *   5. Добавляем заголовки из Map
-     *   6. Отправляем и логируем результат
-     *
-     * @param requestInfo объект с данными запроса (метод, путь, заголовки, тело, query-параметры)
-     * @return HttpResponse с телом ответа в виде строки
-     * @throws IOException если произошла ошибка сети (таймаут, недоступный хост, разрыв соединения)
-     * @throws InterruptedException если поток был прерван во время ожидания ответа
-     */
-    public ApiResponse sendRequest(RequestInfo requestInfo) throws IOException, InterruptedException {
-        // Have body or not
-        HttpRequest.BodyPublisher bodyPublisher;
-        if (requestInfo.getBody() != null) {
-            bodyPublisher = HttpRequest.BodyPublishers.ofString(requestInfo.getBody().content());
-        } else {
-            bodyPublisher = HttpRequest.BodyPublishers.noBody();
-        }
-
-        // Query parameters → string
-        String query = "";
-        if (requestInfo.getQueryParams() != null && !requestInfo.getQueryParams().isEmpty()) {
-            StringBuilder sb = new StringBuilder("?");
-            requestInfo.getQueryParams().forEach((key, value) -> {
-                if (sb.length() > 1) sb.append("&");
-                sb.append(URLEncoder.encode(key, StandardCharsets.UTF_8));
-                sb.append("=");
-                sb.append(URLEncoder.encode(value, StandardCharsets.UTF_8));
-            });
-            query = sb.toString();
-        }
-
-        // URI creation (baseUrl + path + query)
-        URI customUri = URI.create(this.baseUrl + requestInfo.getPath() + query);
-
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(customUri)
-                .method(requestInfo.getMethod(), bodyPublisher);
-
-        // Headers adding
-        requestInfo.getHeaders().forEach(builder::header);
-
-        HttpRequest request = builder.build();
-        logRequest(request);
-
-        try {
-            long start = System.currentTimeMillis();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            long duration = System.currentTimeMillis() - start;
-
-            logResponse(response, duration);
-            ApiResponse customResponse = new ApiResponse(response, duration);
-            return customResponse;
-
-        } catch (IOException e) {
-            // Сетевые ошибки: таймаут, DNS не найден, сервер не отвечает, разрыв соединения
-            log.error("Network error: {} {} | reason: {}",
-                    requestInfo.getMethod(), customUri, e.getMessage());
-            throw e;  // пробрасываем дальше — пусть тест решает что делать
-
-        } catch (InterruptedException e) {
-            // Поток был прерван (например, TestNG остановил тест по таймауту)
-            log.error("Request interrupted: {} {} | reason: {}",
-                    requestInfo.getMethod(), customUri, e.getMessage());
-            Thread.currentThread().interrupt();  // восстанавливаем флаг прерывания
-            throw e;
-        }
     }
 }

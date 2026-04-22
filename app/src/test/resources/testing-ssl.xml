@@ -5,10 +5,12 @@
     Запуск: ./gradlew sslTest
 -->
 <suite name="SslSuite" parallel="methods" thread-count="2" verbose="2">
-
+    <listeners>
+        <listener class-name="org.ugina.retry.RetryListener"/>
+    </listeners>
     <test name="SSL Tests">
         <classes>
-            <class name="org.ugina.api.SimpleSslConfigTest"/>
+            <class name="org.ugina.apiTests.SimpleSslConfigTest"/>
         </classes>
     </test>
 

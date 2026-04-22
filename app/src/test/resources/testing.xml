@@ -2,10 +2,12 @@
 
 <!-- Полный запуск: ./gradlew test -->
 <suite name="FullSuite" verbose="2">
-
+    <listeners>
+        <listener class-name="org.ugina.retry.RetryListener"/>
+    </listeners>
     <test name="API Tests" parallel="methods" thread-count="4">
         <classes>
-            <class name="org.ugina.api.SimpleApiTest"/>
+            <class name="org.ugina.apiTests.SimpleApiTest"/>
         </classes>
     </test>
 
