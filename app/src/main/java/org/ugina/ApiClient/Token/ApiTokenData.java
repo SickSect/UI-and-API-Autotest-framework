@@ -60,6 +60,15 @@ public class ApiTokenData {
     }
 
     /**
+     * Принудительно помечает токен как expired.
+     * Вызывается когда сервер вернул 401 — значит токен невалиден,
+     * даже если по времени он ещё "живой".
+     */
+    public void forceExpire() {
+        this.expiresAt = Instant.now().minusSeconds(1);
+    }
+
+    /**
      * Constructor without expiration — token never expires (until 401).
      * Конструктор без времени жизни — токен не истекает (пока не получим 401).
      *

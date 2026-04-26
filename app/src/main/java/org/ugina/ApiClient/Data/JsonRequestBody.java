@@ -9,7 +9,7 @@ public class JsonRequestBody implements IRequestBody {
 
     @Override
     public String content() {
-        return "";
+        return json;
     }
 
     @Override

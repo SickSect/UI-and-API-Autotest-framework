@@ -126,6 +126,7 @@ public class SimpleTokenTest {
         // Проверяем что refresh вызвался ровно один раз
         Assert.assertEquals(authServer.getRefreshCount(), refreshesBefore + 1,
                 "Refresh should be called exactly once on 401");
+
     }
 
     // ════════════════════════════════════════════

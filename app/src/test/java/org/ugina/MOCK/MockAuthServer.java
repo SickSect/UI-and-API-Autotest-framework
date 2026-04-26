@@ -154,9 +154,18 @@ public class MockAuthServer {
                 return;
             }
 
-            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            // HttpServer + HttpClient issue: getRequestBody() может вернуть пустой поток
+            // при chunked transfer. Читаем через content-length вручную.
+            String contentLength = exchange.getRequestHeaders().getFirst("Content-length");
+            byte[] bytes;
+            if (contentLength != null && Integer.parseInt(contentLength) > 0) {
+                int length = Integer.parseInt(contentLength);
+                bytes = exchange.getRequestBody().readNBytes(length);
+            } else {
+                bytes = exchange.getRequestBody().readAllBytes();
+            }
+            String body = new String(bytes, StandardCharsets.UTF_8);
 
-            // Simple credential check
             if (body.contains(VALID_USERNAME) && body.contains(VALID_PASSWORD)) {
                 currentAccessToken = "access_" + UUID.randomUUID();
                 currentRefreshToken = "refresh_" + UUID.randomUUID();

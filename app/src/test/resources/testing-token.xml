@@ -1,0 +1,20 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+    UI-тесты (Appium).
+    Запуск: ./gradlew uiTest
+    С облаком: ./gradlew uiTest -Dtest.mode=cloud
+
+    parallel="tests" — каждый <test> блок в своём потоке.
+    НЕ parallel="methods" — потому что AndroidDriver не потокобезопасен.
+    Один драйвер = одно устройство = один поток.
+-->
+<suite name="TokenSuite" parallel="none" thread-count="1" verbose="1">
+
+    <test name="Token tests">
+        <classes>
+            <class name="org.ugina.apiTests.SimpleTokenTest"/>
+        </classes>
+    </test>
+
+</suite>

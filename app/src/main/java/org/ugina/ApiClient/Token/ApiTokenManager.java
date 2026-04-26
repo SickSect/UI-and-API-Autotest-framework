@@ -244,6 +244,7 @@ public class ApiTokenManager {
             // Шаг 4: Обработка 401 — токен мог истечь между проверкой и отправкой
             if (response.statusCode() == 401) {
                 log.warn("Got 401 for '{}' — refreshing and retrying", hostName);
+                tokenData.forceExpire();
                 refreshTokens(hostName);
                 tokenData = ApiTokenProvider.get(hostName);
 

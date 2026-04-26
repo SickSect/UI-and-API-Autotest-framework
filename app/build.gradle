@@ -161,3 +161,24 @@ tasks.register('sslTest', Test) {
         events "passed", "failed", "skipped"
     }
 }
+
+// ──── 5. Только Token-тесты ────
+// Запуск: ./gradlew tokenTest
+
+tasks.register('tokenTest', Test) {
+    group = 'verification'
+    description = 'Run Token tests only'
+
+    testClassesDirs= sourceSets.test.output.classesDirs
+    classpath=sourceSets.test.runtimeClasspath
+
+    useTestNG() {
+        suites 'src/test/resources/testing-token.xml'
+        useDefaultListeners = false
+    }
+
+    testLogging {
+        showStandardStreams = true
+        events "passed", "failed", "skipped"
+    }
+}

@@ -134,6 +134,11 @@ public class ApiRequestClient {
 
         HttpRequest request = builder.build();
         logRequest(request);
+// DEBUG: проверяем что body publisher содержит данные
+        System.out.println("=== DEBUG: method=" + request.method());
+        System.out.println("=== DEBUG: bodyPublisher present=" + request.bodyPublisher().isPresent());
+        request.bodyPublisher().ifPresent(bp ->
+                System.out.println("=== DEBUG: contentLength=" + bp.contentLength()));
 
         // 6. Send
         try {
