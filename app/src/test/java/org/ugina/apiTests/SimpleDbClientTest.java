@@ -26,7 +26,7 @@ import java.util.Map;
  *
  * Credentials: "sa" / "" — стандартные для H2 (sa = system admin).
  */
-public class DbClientTest {
+public class SimpleDbClientTest {
 
     private IDbClient db;
 

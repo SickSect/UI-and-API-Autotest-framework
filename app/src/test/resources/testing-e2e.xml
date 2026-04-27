@@ -11,7 +11,7 @@
 
     <test name="Database Tests" parallel="false">
         <classes>
-            <class name="org.ugina.apiTests.DbClientTest"/>
+            <class name="org.ugina.apiTests.SimpleDbClientTest"/>
         </classes>
     </test>
 
