@@ -23,6 +23,9 @@ dependencies {
 
     // REPORT
     testImplementation("io.qameta.allure:allure-testng:2.33.0")
+
+    // DB
+    testImplementation("com.h2database:h2:2.4.240")
 }
 
 allure {
@@ -90,6 +93,9 @@ test {
         showStandardStreams = true
         events "passed", "failed", "skipped"
     }
+    dependsOn {
+        tasks.clean
+    }
 }
 
 
@@ -115,6 +121,8 @@ tasks.register('apiTest', Test) {
         showStandardStreams = true
         events "passed", "failed", "skipped"
     }
+
+    dependsOn tasks.clean
 }
 
 
@@ -138,6 +146,8 @@ tasks.register('uiTest', Test) {
         showStandardStreams = true
         events "passed", "failed", "skipped"
     }
+
+    dependsOn tasks.clean
 }
 
 
@@ -160,6 +170,8 @@ tasks.register('sslTest', Test) {
         showStandardStreams = true
         events "passed", "failed", "skipped"
     }
+
+    dependsOn tasks.clean
 }
 
 // ──── 5. Только Token-тесты ────
@@ -181,4 +193,31 @@ tasks.register('tokenTest', Test) {
         showStandardStreams = true
         events "passed", "failed", "skipped"
     }
+
+    dependsOn tasks.clean
 }
+
+// ──── 6. e2e ────
+// Запуск: ./gradlew e2eTest
+
+tasks.register('e2eTest', Test) {
+    group = 'verification'
+    description = 'Run DB + End-to-End tests'
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    useTestNG() {
+        suites 'src/test/resources/testing-e2e.xml'
+        useDefaultListeners = false
+    }
+
+    testLogging {
+        showStandardStreams = true
+        events "passed", "failed", "skipped"
+    }
+
+    dependsOn tasks.clean
+}
+
+
