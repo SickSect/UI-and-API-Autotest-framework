@@ -53,6 +53,7 @@ tasks.withType(io.qameta.allure.gradle.report.tasks.AllureServe).configureEach {
 }
 
 tasks.register('testWithReport') {
+    systemProperties System.getProperties()
     group = 'verification'
     description = 'Clean, run tests and generate Allure report (without starting server)'
 
@@ -77,6 +78,7 @@ tasks.register('testWithReport') {
 // Или с кастомным XML: ./gradlew test -Dtestng.xml=src/test/resources/testing-api.xml
 
 test {
+    systemProperties System.getProperties()
     useTestNG() {
         def suiteFile = System.getProperty('testng.xml', 'src/test/resources/testing.xml')
         if (file(suiteFile).exists()) {
@@ -107,6 +109,7 @@ test {
 // со своим XML-файлом и своими настройками.
 
 tasks.register('apiTest', Test) {
+    systemProperties System.getProperties()
     group = 'verification'                          // группа в ./gradlew tasks
     description = 'Run API tests only (parallel)'
     testClassesDirs= sourceSets.test.output.classesDirs
@@ -131,6 +134,7 @@ tasks.register('apiTest', Test) {
 // Или с cloud: ./gradlew uiTest -Dtest.mode=cloud
 
 tasks.register('uiTest', Test) {
+    systemProperties System.getProperties()
     group = 'verification'
     description = 'Run UI/Appium tests only'
 
@@ -155,6 +159,7 @@ tasks.register('uiTest', Test) {
 // Запуск: ./gradlew sslTest
 
 tasks.register('sslTest', Test) {
+    systemProperties System.getProperties()
     group = 'verification'
     description = 'Run SSL/certificate tests only'
 
@@ -178,6 +183,7 @@ tasks.register('sslTest', Test) {
 // Запуск: ./gradlew tokenTest
 
 tasks.register('tokenTest', Test) {
+    systemProperties System.getProperties()
     group = 'verification'
     description = 'Run Token tests only'
 
@@ -201,6 +207,7 @@ tasks.register('tokenTest', Test) {
 // Запуск: ./gradlew e2eTest
 
 tasks.register('e2eTest', Test) {
+    systemProperties System.getProperties()
     group = 'verification'
     description = 'Run DB + End-to-End tests'
 
